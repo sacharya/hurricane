@@ -1,0 +1,42 @@
+group 'sacharya'
+description '''Kafka and Hurricane integration'''
+version '0.1'
+
+allprojects {
+    apply plugin: 'java'
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
+}
+apply plugin:'groovy'
+apply plugin:'application'
+
+defaultTasks 'wordCount'
+
+repositories {
+  mavenCentral()
+  maven {
+    name 'clojars.org'
+    url  'http://clojars.org/repo'
+  }
+  maven {
+    name 'conjars.org'
+    url = "http://conjars.org/repo"
+  }
+
+}
+
+dependencies {
+  compile     'org.codehaus.groovy:groovy-all:2.3.6'
+  compile     'org.slf4j:slf4j-log4j12:1.7.5'
+  compile     'org.apache.zookeeper:zookeeper:3.4.5'
+  compile     'org.apache.storm:storm-core:0.9.3'
+  compile     'org.apache.storm:storm-kafka:0.9.3'
+  compile     'org.apache.kafka:kafka_2.9.2:0.8.0'
+  testCompile 'junit:junit:4.12'
+}
+
+task( wordCount, group:'In-process Storm Example', type:JavaExec ) {
+  println "Wordcount running"
+  main = 'storm.WordCountExample'
+  classpath = sourceSets.main.runtimeClasspath
+}
