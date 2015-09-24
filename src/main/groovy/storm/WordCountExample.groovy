@@ -15,7 +15,10 @@ import storm.kafka.ZkHosts;
 import storm.kafka.KafkaSpout
 import storm.kafka.SpoutConfig
 import storm.kafka.BrokerHosts
-
+import backtype.storm.tuple.Fields
+import backtype.storm.tuple.Tuple
+import backtype.storm.tuple.Values
+import backtype.storm.utils.Utils
 import java.util.UUID
 
 import backtype.storm.topology.base.BaseRichSpout
@@ -39,8 +42,8 @@ public class WordCountExample {
         KafkaSpout kafkaSpout = new KafkaSpout(kafkaConf)
         println kafkaSpout
         StormTopology topology = new TopologyBuilder().with {
-            //setSpout( 'spout', new RandomSentenceSpout(), 5  )
-            setSpout( 'spout', kafkaSpout, 5  )
+            setSpout( 'spout', new RandomSentenceSpout(), 5  )
+            //setSpout( 'spout', kafkaSpout, 5  )
             setBolt(  'split', new SplitSentenceBolt(),   8  ).shuffleGrouping( 'spout')
             setBolt(  'count', new WordCountBolt(),       12 ).fieldsGrouping( 'split', new Fields( 'word' ) )
             setBolt(  'print', new PrinterBolt(), 15).shuffleGrouping( 'count')
