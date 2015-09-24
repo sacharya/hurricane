@@ -18,6 +18,9 @@ import storm.kafka.BrokerHosts
 
 import java.util.UUID
 
+import backtype.storm.topology.base.BaseRichSpout
+import backtype.storm.spout.SpoutOutputCollector
+import backtype.storm.task.TopologyContext
 /**
  * The simplest example of getting Storm running
  *
@@ -55,13 +58,45 @@ public class WordCountExample {
 	          conf.maxTaskParallelism = 3
 
             LocalCluster cluster = new LocalCluster()
+            print "Submitting"
             cluster.submitTopology( 'word-count', conf, topology )
-        
+            print "Submitted"
             Thread.sleep( 10000 )
 
             cluster.shutdown()
         }
     }
+}
+class RandomSentenceSpout extends BaseRichSpout {
+  SpoutOutputCollector collector
+  Random rand
+  List sentences = [ 'the cow jumped over the moon', 
+                  'an apple a day keeps the doctor away',
+                  'four score and seven years ago', 
+                  'snow white and the seven dwarfs',
+                  'i am at two with nature']
+
+  @Override
+  public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
+    this.collector = collector
+    this.rand = new Random()
+  }
+
+  @Override
+  public void nextTuple() {
+    Utils.sleep(100)
+    collector.emit( new Values( sentences[ rand.nextInt( sentences.size() ) ] ) )
+  }
+                                                                                                                                                                @Override
+  public void ack( Object id ) { }
+  
+  @Override
+  public void fail( Object id ) { }
+
+  @Override
+  public void declareOutputFields( OutputFieldsDeclarer declarer ) {
+    declarer.declare( new Fields( 'word' ) )
+  }
 }
 
 class SplitSentenceBolt extends BaseBasicBolt {
