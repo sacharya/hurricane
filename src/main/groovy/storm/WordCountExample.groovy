@@ -15,6 +15,7 @@ import storm.kafka.ZkHosts;
 import storm.kafka.KafkaSpout
 import storm.kafka.SpoutConfig
 import storm.kafka.BrokerHosts
+import storm.kafka.StringScheme
 import backtype.storm.tuple.Fields
 import backtype.storm.tuple.Tuple
 import backtype.storm.tuple.Values
@@ -24,6 +25,9 @@ import java.util.UUID
 import backtype.storm.topology.base.BaseRichSpout
 import backtype.storm.spout.SpoutOutputCollector
 import backtype.storm.task.TopologyContext
+
+import backtype.storm.spout.SchemeAsMultiScheme;
+
 /**
  * The simplest example of getting Storm running
  *
@@ -39,11 +43,14 @@ public class WordCountExample {
 
         SpoutConfig kafkaConf = new SpoutConfig(hosts, topic, "/" + topic, UUID.randomUUID().toString())
         println kafkaConf
+        kafkaConf.forceFromStart = true
+        //kafkaConf.forceStartOffsetTime(-2)
+        kafkaConf.scheme = new SchemeAsMultiScheme(new StringScheme());
         KafkaSpout kafkaSpout = new KafkaSpout(kafkaConf)
         println kafkaSpout
         StormTopology topology = new TopologyBuilder().with {
-            setSpout( 'spout', new RandomSentenceSpout(), 5  )
-            //setSpout( 'spout', kafkaSpout, 5  )
+            //setSpout( 'spout', new RandomSentenceSpout(), 5  )
+            setSpout( 'spout', kafkaSpout, 5  )
             setBolt(  'split', new SplitSentenceBolt(),   8  ).shuffleGrouping( 'spout')
             setBolt(  'count', new WordCountBolt(),       12 ).fieldsGrouping( 'split', new Fields( 'word' ) )
             setBolt(  'print', new PrinterBolt(), 15).shuffleGrouping( 'count')
