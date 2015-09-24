@@ -42,10 +42,10 @@ public class WordCountExample {
 
         StormTopology topology = new TopologyBuilder().with {
             //setSpout( 'spout', new RandomSentenceSpout(), 5  )
-            setSpout( 'spout', objectKafkaSpout, 5  )
-            setSpout( 'spout', syncKafkaSpout, 5  )
-            setBolt(  'split', new SplitSentenceBolt(),   8  ).shuffleGrouping( 'spout')
-            setBolt(  'count', new WordCountBolt(),       12 ).fieldsGrouping( 'split', new Fields( 'word' ) )
+            setSpout( 'objectSpout', objectKafkaSpout, 5  )
+            setSpout( 'syncSpout', syncKafkaSpout, 5  )
+            setBolt(  'split', new SplitSentenceBolt(),   8  ).shuffleGrouping( 'objectSpout').shuffleGrouping('syncSpout')
+            setBolt(  'count', new WordCountBolt(),       12 ).shuffleGrouping( 'split')
             setBolt(  'print', new PrinterBolt(), 15).shuffleGrouping( 'count')
             createTopology()
         }
@@ -70,7 +70,7 @@ public class WordCountExample {
         }
     }
 
-    private KafkaSpout getKafkaSpout(String topic) {
+    private static KafkaSpout getKafkaSpout(String topic) {
       String brokerZkStr = "0.0.0.0:2181";
       BrokerHosts hosts = new ZkHosts(brokerZkStr);
       SpoutConfig kafkaConf = new SpoutConfig(hosts, topic, "/" + topic, UUID.randomUUID().toString())
