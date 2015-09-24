@@ -37,20 +37,13 @@ import backtype.storm.spout.SchemeAsMultiScheme;
 public class WordCountExample {
     static main( args ) {
         println "Entering WordCountExample "
-        String brokerZkStr = "0.0.0.0:2181";
-        String topic = "test";
-        BrokerHosts hosts = new ZkHosts(brokerZkStr);
+        KafkaSpout objectKafkaSpout = getKafkaSpout("object_events");
+        KafkaSpout syncKafkaSpout = getKafkaSpout("sync_events");
 
-        SpoutConfig kafkaConf = new SpoutConfig(hosts, topic, "/" + topic, UUID.randomUUID().toString())
-        println kafkaConf
-        kafkaConf.forceFromStart = true
-        //kafkaConf.forceStartOffsetTime(-2)
-        kafkaConf.scheme = new SchemeAsMultiScheme(new StringScheme());
-        KafkaSpout kafkaSpout = new KafkaSpout(kafkaConf)
-        println kafkaSpout
         StormTopology topology = new TopologyBuilder().with {
             //setSpout( 'spout', new RandomSentenceSpout(), 5  )
-            setSpout( 'spout', kafkaSpout, 5  )
+            setSpout( 'spout', objectKafkaSpout, 5  )
+            setSpout( 'spout', syncKafkaSpout, 5  )
             setBolt(  'split', new SplitSentenceBolt(),   8  ).shuffleGrouping( 'spout')
             setBolt(  'count', new WordCountBolt(),       12 ).fieldsGrouping( 'split', new Fields( 'word' ) )
             setBolt(  'print', new PrinterBolt(), 15).shuffleGrouping( 'count')
@@ -75,6 +68,16 @@ public class WordCountExample {
 
             cluster.shutdown()
         }
+    }
+
+    private KafkaSpout getKafkaSpout(String topic) {
+      String brokerZkStr = "0.0.0.0:2181";
+      BrokerHosts hosts = new ZkHosts(brokerZkStr);
+      SpoutConfig kafkaConf = new SpoutConfig(hosts, topic, "/" + topic, UUID.randomUUID().toString())
+      kafkaConf.scheme = new SchemeAsMultiScheme(new StringScheme());
+      KafkaSpout kafkaSpout = new KafkaSpout(kafkaConf)
+      println kafkaSpout
+      return kafkaSpout
     }
 }
 class RandomSentenceSpout extends BaseRichSpout {
