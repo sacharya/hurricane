@@ -37,6 +37,6 @@ dependencies {
 
 task( wordCount, group:'In-process Storm Example', type:JavaExec ) {
   println "Wordcount running"
-  main = 'storm.WordCountExample'
+  main = 'storm.topologies.WordCountExample'
   classpath = sourceSets.main.runtimeClasspath
 }
